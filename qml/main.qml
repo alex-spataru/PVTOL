@@ -22,7 +22,6 @@ import QtQuick 2.0
 import QtQuick.Window 2.0
 import QtQuick.Layouts 1.0
 import QtQuick.Controls 2.0
-import QtQuick.Controls.Material 2.0
 import QtQuick.Controls.Universal 2.0
 
 import Qt.labs.settings 1.0
@@ -34,12 +33,9 @@ ApplicationWindow {
     minimumHeight: 520
     title: qsTr("Banco de Pruebas PVTOL")
 
-    Material.theme: Material.Dark
-    Material.primary: Material.Green
-    Material.accent: Material.Green
     Universal.theme: Universal.Dark
-    Universal.accent: Universal.Green
-    Universal.background: Qt.rgba(40/255, 42/255, 51/255, 1)
+    Universal.accent: Qt.rgba(56/255, 173/255, 107/255, 1)
+    Universal.background: Qt.rgba(35/255, 35/255, 43/255, 1)
 
     Settings {
         property alias _x: app.x
