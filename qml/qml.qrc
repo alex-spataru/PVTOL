@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/qml">
+        <file>Controls.qml</file>
+        <file>Graph.qml</file>
+        <file>main.qml</file>
+        <file>DoubleSpinBox.qml</file>
+    </qresource>
+</RCC>
