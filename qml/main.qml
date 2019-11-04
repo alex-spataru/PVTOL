@@ -152,8 +152,9 @@ ApplicationWindow {
 
         Controls {
             id: controls
-            Layout.fillHeight: true
             Layout.rightMargin: 16
+            Layout.fillHeight: true
+            Layout.fillWidth: false
         }
     }
 

@@ -32,10 +32,6 @@ class Serial : public QObject {
     Q_PROPERTY(bool connected
                READ connected
                NOTIFY connectionChanged)
-    Q_PROPERTY(bool fileLoggingEnabled
-               READ fileLoggingEnabled
-               WRITE enableFileLogging
-               NOTIFY fileLoggingEnabledChanged)
     Q_PROPERTY(QString receivedBytes
                READ receivedBytes
                NOTIFY packetReceived)
@@ -54,8 +50,6 @@ signals:
     void baudRateChanged();
     void connectionChanged();
     void serialDevicesChanged();
-    void fileLoggingEnabledChanged();
-    void packetLogged(const QString& data);
     void packetReceived(const QByteArray& data);
     void connectionError(const QString& deviceName);
     void connectionSuccess(const QString& deviceName);
@@ -81,31 +75,23 @@ public:
     }
 
 public slots:
-    void openLogFile();
     void setBaudRate(const int rate);
     void startComm(const int device);
-    void enableFileLogging(const bool enabled);
 
 private slots:
     void onDataReceived();
     void disconnectDevice();
-    void configureLogFile();
     void refreshSerialDevices();
-    void formatReceivedPacket(const QByteArray& data);
 
 private:
-    bool packetLogAvailable() const;
     QString sizeStr(const qint64 bytes) const;
 
 private:
     int m_baudRate;
-    QFile m_packetLog;
     qint64 m_dataLen;
     QByteArray m_buffer;
     QSerialPort* m_port;
     QStringList m_serialDevices;
-
-    bool m_enableFileLogging;
 };
 
 #endif

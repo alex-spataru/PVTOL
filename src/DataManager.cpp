@@ -32,8 +32,10 @@
 #include <QXYSeries>
 #include <QMetaType>
 #include <QSerialPort>
+#include <QMessageBox>
 #include <QAbstractSeries>
 #include <QSerialPortInfo>
+#include <QDesktopServices>
 
 //------------------------------------------------------------------------------
 // Magic
@@ -43,7 +45,7 @@ QT_CHARTS_USE_NAMESPACE
 Q_DECLARE_METATYPE(QAbstractSeries*)
 Q_DECLARE_METATYPE(QAbstractAxis*)
 
-#define MAX_READINGS 2000
+#define MAX_READINGS 12 * 1000
 
 //------------------------------------------------------------------------------
 // Constructor
@@ -57,6 +59,7 @@ DataManager::DataManager() {
     m_maxValue = 0;
     m_minValue = 0;
     m_numReadings = 0;
+    m_csvDataFileEnabled = false;
     
     // Connect Serial signals/slots
     connect(Serial::getInstance(), &Serial::packetReceived,
@@ -94,6 +97,10 @@ quint64 DataManager::numReadings() const {
     return m_numReadings;
 }
 
+bool DataManager::csvLoggingEnabled() const {
+    return m_csvDataFileEnabled;
+}
+
 int DataManager::chopData(const int maxItems) {
     if (m_readings.count() > maxItems) {
         int i = m_readings.count() - maxItems;
@@ -118,6 +125,11 @@ void DataManager::clearData() {
     emit dataReceived();
 }
 
+void DataManager::openCsvFile() {
+    if (csvLoggingEnabled())
+        QDesktopServices::openUrl(QUrl::fromLocalFile(m_file.fileName()));
+}
+
 void DataManager::setP(const double& p) {
     m_P = p;
     emit pidValuesChanged();
@@ -131,6 +143,18 @@ void DataManager::setI(const double& i) {
 void DataManager::setD(const double& d) {
     m_D = d;
     emit pidValuesChanged();
+}
+
+void DataManager::setCsvLoggingEnabled(const bool e) {
+    // Change CSV enabled variable
+    m_csvDataFileEnabled = e;
+    emit csvLoggingEnabledChanged();
+
+    // Close current CSV file
+    if (csvLoggingEnabled()) {
+        if (m_file.isOpen())
+            m_file.close();
+    }
 }
 
 void DataManager::updateGraph(QAbstractSeries* series) {
@@ -189,8 +213,49 @@ void DataManager::onPacketReceived(const QByteArray& data) {
     
     // Add current value to readings list
     m_readings.append(QPointF(m_numReadings, reading));
+
+    // Save CSV data
+    saveCsvData(m_numReadings, reading);
     
     // Notify UI
     emit dataReceived();
 }
 
+void DataManager::saveCsvData(const quint64 n, const double reading) {
+    if (csvLoggingEnabled()) {
+        // Open CSV file
+        if (!m_file.isOpen()) {
+            // Get file name and path
+            QString format = QDateTime::currentDateTime().toString("yyyy/MMM/dd/");
+            QString fileName = QDateTime::currentDateTime().toString("HH-mm-ss") + ".csv";
+            QString path = QString("%1/%2/%3/%4").arg(
+                        QDir::homePath(),
+                        qApp->applicationName(),
+                        Serial::getInstance()->deviceName(),
+                        format);
+
+            // Generate file path if required
+            QDir dir(path);
+            if (!dir.exists())
+                dir.mkpath(".");
+
+            // Open file
+            m_file.setFileName(dir.filePath(fileName));
+            if (!m_file.open(QFile::WriteOnly)) {
+                QMessageBox::critical(Q_NULLPTR,
+                                      tr("CSV File Error"),
+                                      tr("Cannot open CSV file for writing!"),
+                                      QMessageBox::Ok);
+                return;
+            }
+
+            // Add CSV data headers
+            m_file.write("Num. Lectura,Valor\n");
+
+        }
+
+        // Write current data to CSV file
+        QString data = QString("%1,%2\n").arg(n).arg(reading);
+        m_file.write(data.toUtf8());
+    }
+}

@@ -50,14 +50,8 @@ static Serial* instance = Q_NULLPTR;
 Serial::Serial() :
     m_baudRate(9600),
     m_dataLen(-1),
-    m_port(Q_NULLPTR),
-    m_enableFileLogging(false)
+    m_port(Q_NULLPTR)
 {
-    connect(this, &Serial::packetReceived,
-            this, &Serial::formatReceivedPacket);
-    connect(this, &Serial::connectionChanged,
-            this, &Serial::configureLogFile);
-
     QTimer::singleShot(500, this, &Serial::refreshSerialDevices);
 }
 
@@ -68,9 +62,6 @@ Serial::Serial() :
 Serial::~Serial() {
     if (m_port != Q_NULLPTR)
         m_port->close();
-
-    if (m_packetLog.isOpen())
-        m_packetLog.close();
 }
 
 /**
@@ -102,14 +93,6 @@ bool Serial::connected() const  {
         return m_port->isOpen();
 
     return false;
-}
-
-/**
- * @returns @c true if the class will save all inconming data in a nice HTML
- *          formatted file with received data and timestamps
- */
-bool Serial::fileLoggingEnabled() const {
-    return m_enableFileLogging;
 }
 
 /**
@@ -153,11 +136,6 @@ QStringList Serial::baudRates() const {
  */
 QStringList Serial::serialDevices() const {
     return m_serialDevices;
-}
-
-void Serial::openLogFile() {
-    if (packetLogAvailable())
-        QDesktopServices::openUrl(QUrl::fromLocalFile(m_packetLog.fileName()));
 }
 
 /**
@@ -215,29 +193,6 @@ void Serial::startComm(const int device) {
         else
             emit connectionError("Invalid");
     }
-}
-
-/**
- * @brief SerialManager::enableFileLogging
- * @param enabled
- */
-void Serial::enableFileLogging(const bool enabled) {
-    // Save previous value
-    bool previousValue = fileLoggingEnabled();
-
-    // Update file logging setting
-    m_enableFileLogging = enabled;
-
-    // New value is different than previous value, open or close the log file
-    if (previousValue != enabled) {
-        if (enabled)
-            configureLogFile();
-        else if (m_packetLog.isOpen())
-            m_packetLog.close();
-    }
-
-    // Update UI
-    emit fileLoggingEnabledChanged();
 }
 
 /**
@@ -317,51 +272,6 @@ void Serial::disconnectDevice() {
 }
 
 /**
- * @brief SerialManager::configureLogFile
- */
-void Serial::configureLogFile() {
-    // Close log file
-    if (m_packetLog.isOpen())
-        m_packetLog.close();
-
-    // Serial device is invalid, abort
-    if (!m_port) {
-        m_packetLog.setFileName("");
-        return;
-    }
-
-    // Serial device is not open, abort
-    if (!m_port->isOpen()) {
-        m_packetLog.setFileName("");
-        return;
-    }
-
-    // File logging disabled
-    if (!fileLoggingEnabled())
-        return;
-
-    // Get file name and path
-    QString format = QDateTime::currentDateTime().toString("yyyy/MMM/dd/");
-    QString fileName = QDateTime::currentDateTime().toString("HH-mm-ss") + ".html";
-    QString path = QString("%1/%2/%3/%4").arg(QDir::homePath(),
-                                              qApp->applicationName(),
-                                              m_port->portName(),
-                                              format);
-
-    // Generate file path if required
-    QDir dir(path);
-    if (!dir.exists())
-        dir.mkpath(".");
-
-    // Open file
-    m_packetLog.setFileName(dir.filePath(fileName));
-    if (!m_packetLog.open(QFile::WriteOnly))
-        qWarning() << "Cannot open" << m_packetLog.fileName() << "for writting";
-    else
-        m_packetLog.close();
-}
-
-/**
  * @brief SerialManager::refreshSerialDevices
  */
 void Serial::refreshSerialDevices() {
@@ -383,35 +293,6 @@ void Serial::refreshSerialDevices() {
 
     // Call this function again in one second
     QTimer::singleShot(1000, this, &Serial::refreshSerialDevices);
-}
-
-/**
- * @brief SerialManager::formatReceivedPacket
- * @param packet
- */
-void Serial::formatReceivedPacket(const QByteArray& packet) {
-    // Do not take into account empty packets
-    if (packet.isEmpty())
-        return;
-
-    // Write received data to log file
-    if (packetLogAvailable()) {
-        if (m_packetLog.open(QFile::Append)) {
-            m_packetLog.write(packet);
-            m_packetLog.close();
-        }
-    }
-
-    // Notify application
-    emit packetLogged(QString::fromUtf8(packet));
-}
-
-/**
- * @brief SerialManager::packetLogAvailable
- * @return
- */
-bool Serial::packetLogAvailable() const {
-    return !m_packetLog.fileName().isEmpty() && fileLoggingEnabled();
 }
 
 /**

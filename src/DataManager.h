@@ -21,6 +21,7 @@
 #ifndef DATA_MANAGER_H
 #define DATA_MANAGER_H
 
+#include <QFile>
 #include <QObject>
 #include <QVector>
 #include <QPointF>
@@ -51,6 +52,10 @@ class DataManager : public QObject {
     Q_PROPERTY(double minValue
                READ minValue
                NOTIFY minValueChanged)
+    Q_PROPERTY(bool csvLoggingEnabled
+               READ csvLoggingEnabled
+               WRITE setCsvLoggingEnabled
+               NOTIFY csvLoggingEnabledChanged)
     
 signals:
     void reset();
@@ -58,6 +63,7 @@ signals:
     void maxValueChanged();
     void minValueChanged();
     void pidValuesChanged();
+    void csvLoggingEnabledChanged();
     
 public:
     explicit DataManager();
@@ -68,18 +74,22 @@ public:
     double maxValue() const;
     double minValue() const;
     quint64 numReadings() const;
+    bool csvLoggingEnabled() const;
     Q_INVOKABLE int chopData(const int maxItems);
     
 public slots:
     void clearData();
+    void openCsvFile();
     void setP(const double& p);
     void setI(const double& i);
     void setD(const double& d);
+    void setCsvLoggingEnabled(const bool e);
     void updateGraph(QAbstractSeries* series);
 
 private slots:
     void sendData();
     void onPacketReceived(const QByteArray& data);
+    void saveCsvData(const quint64 n, const double reading);
 
 private:
     double m_P;
@@ -87,7 +97,9 @@ private:
     double m_D;
     double m_minValue;
     double m_maxValue;
-    
+    bool m_csvDataFileEnabled;
+
+    QFile m_file;
     quint64	m_numReadings;
     QVector<QPointF> m_readings;
 };

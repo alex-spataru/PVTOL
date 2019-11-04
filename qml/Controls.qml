@@ -110,6 +110,7 @@ ColumnLayout {
             CheckBox {
                 id: checkDatosCSV
                 text: qsTr("Guardar datos en archivo CSV")
+                onCheckedChanged: CManager.csvLoggingEnabled = checked
             }
         }
     }
@@ -123,6 +124,7 @@ ColumnLayout {
         Layout.fillWidth: true
         text: qsTr("Abrir archivo CSV")
         enabled: checkDatosCSV.checked && CSerial.connected
+        onClicked: CManager.openCsvFile()
     }
 
     Button {
