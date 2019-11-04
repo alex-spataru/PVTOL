@@ -117,6 +117,9 @@ QString Serial::receivedBytes() const {
     return "0 " + tr("bytes");
 }
 
+/**
+ * Returns a list with standard serial COM baud rates
+ */
 QStringList Serial::baudRates() const {
     return QStringList {
         "1200",
@@ -180,6 +183,7 @@ void Serial::startComm(const int device) {
 
             // Try to open the serial port device
             if (m_port->open(QIODevice::ReadWrite)) {
+                m_port->setTextModeEnabled(true);
                 emit connectionChanged();
                 emit connectionSuccess(m_port->portName());
             }
@@ -204,8 +208,9 @@ void Serial::onDataReceived() {
         return;
 
     // Read incoming data
-    m_dataLen += m_port->bytesAvailable();
-    m_buffer.append(m_port->readAll());
+    const QByteArray data = m_port->readAll();
+    m_dataLen += data.length();
+    m_buffer.append(data);
 
     // Buffer contains EOT byte, which represents a packet
     if (m_buffer.contains(EOT_PRIMARY.toLatin1())) {
@@ -282,7 +287,7 @@ void Serial::refreshSerialDevices() {
     // Search for serial devices
     foreach(QSerialPortInfo port, QSerialPortInfo::availablePorts()) {
         if (!port.description().isEmpty() && !port.isNull())
-            devices.append(port.description());
+            devices.append(port.portName());
     }
 
     // If the obtained list is different from previous list, update UI

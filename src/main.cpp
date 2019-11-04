@@ -26,10 +26,18 @@
 #include "Serial.h"
 #include "DataManager.h"
 
+/**
+ * Entry-point function of the application
+ *
+ * @param argc system argument count
+ * @param argv system argument strings
+ * @return
+ */
 int main(int argc, char** argv) {
     QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
     QApplication app(argc, argv);
+    app.setOrganizationName("UNAQ");
     app.setApplicationName("Banco de Pruebas PVTOL");
     app.setApplicationVersion("0.1");
 

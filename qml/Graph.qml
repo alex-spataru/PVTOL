@@ -31,7 +31,14 @@ GroupBox {
     ChartView {
         antialiasing: false
         anchors.fill: parent
-        anchors.margins: -22
+
+        anchors.margins: {
+            if (Qt.platform.os == "osx")
+                return -22
+
+            return -20
+        }
+
         legend.visible: false
         backgroundRoundness: 1
         theme: ChartView.ChartThemeDark

@@ -47,7 +47,16 @@ ApplicationWindow {
     //
     // Constants
     //
-    readonly property string monoFont: "Menlo"
+    readonly property string monoFont: {
+        if (Qt.platform.os == "osx")
+            return "Menlo"
+
+        else if (Qt.platform.os == "windows")
+            return "Consolas"
+
+        else
+            return "Monospace"
+    }
 
     //
     // Settings module

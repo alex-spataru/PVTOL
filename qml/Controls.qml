@@ -30,6 +30,7 @@ ColumnLayout {
     Settings {
         property alias _cg: checkDatosCSV.checked
         property alias _rg: rangoCombo.currentIndex
+        property alias _br: baudRate.currentIndex
     }
 
     Item {
@@ -85,10 +86,12 @@ ColumnLayout {
             }
 
             ComboBox {
+                id: baudRate
                 currentIndex: 3
                 Layout.fillWidth: true
                 model: CSerial.baudRates
                 onCurrentTextChanged: CSerial.setBaudRate(currentText)
+                Component.onCompleted: CSerial.setBaudRate(currentText)
             }
 
             Label {
