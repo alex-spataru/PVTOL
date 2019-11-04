@@ -14,7 +14,7 @@ CONFIG += c++11
 #-------------------------------------------------------------------------------
 
 TEMPLATE = app
-TARGET = pvtol
+TARGET = PVTOL
 
 CONFIG += qtc_runnable
 CONFIG += resources_big
@@ -25,10 +25,8 @@ QT += svg
 QT += sql
 QT += core
 QT += quick
-QT += location
-QT += concurrent
+QT += charts
 QT += serialport
-QT += positioning
 QT += quickcontrols2
 
 QTPLUGIN += qsvg
@@ -38,9 +36,11 @@ QTPLUGIN += qsvg
 #-------------------------------------------------------------------------------
 
 HEADERS += \
+    src/DataManager.h \
     src/Serial.h
 
 SOURCES += \
+    src/DataManager.cpp \
     src/Serial.cpp \
     src/main.cpp
 

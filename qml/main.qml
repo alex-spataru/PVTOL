@@ -21,22 +21,37 @@
 import QtQuick 2.0
 import QtQuick.Window 2.0
 import QtQuick.Layouts 1.0
-import QtQuick.Controls 2.0
+import QtQuick.Controls 2.3
 import QtQuick.Controls.Universal 2.0
 
 import Qt.labs.settings 1.0
 
 ApplicationWindow {
     id: app
-    visible: true
-    minimumWidth: 720
-    minimumHeight: 520
-    title: qsTr("Banco de Pruebas PVTOL")
 
+    //
+    // Window options
+    //
+    visible: true
+    minimumWidth: 780
+    minimumHeight: 620
+    title: CAppName + " v" + CAppVersion
+
+    //
+    // Theme options
+    //
     Universal.theme: Universal.Dark
     Universal.accent: Qt.rgba(56/255, 173/255, 107/255, 1)
     Universal.background: Qt.rgba(35/255, 35/255, 43/255, 1)
 
+    //
+    // Constants
+    //
+    readonly property string monoFont: "Menlo"
+
+    //
+    // Settings module
+    //
     Settings {
         property alias _x: app.x
         property alias _y: app.y
@@ -47,6 +62,9 @@ ApplicationWindow {
         property alias _d: kD.realValue
     }
 
+    //
+    // PID controls
+    //
     header: ToolBar {
         height: 48
 
@@ -72,6 +90,7 @@ ApplicationWindow {
                 realValue: 0.01
                 realStepSize: 0.01
                 Layout.fillWidth: true
+                onValueChanged: CManager.setP(realValue)
             }
 
             Item {
@@ -89,6 +108,7 @@ ApplicationWindow {
                 realValue: 0.01
                 realStepSize: 0.01
                 Layout.fillWidth: true
+                onValueChanged: CManager.setI(realValue)
             }
 
             Item {
@@ -106,6 +126,7 @@ ApplicationWindow {
                 realValue: 0.01
                 realStepSize: 0.01
                 Layout.fillWidth: true
+                onValueChanged: CManager.setD(realValue)
             }
 
             Item {
@@ -114,6 +135,9 @@ ApplicationWindow {
         }
     }
 
+    //
+    // UI
+    //
     RowLayout {
         spacing: 16
         anchors.margins: 8
@@ -121,13 +145,76 @@ ApplicationWindow {
         anchors.centerIn: parent
 
         Graph {
+            modo: controls.rango
             Layout.fillWidth: true
             Layout.fillHeight: true
         }
 
         Controls {
+            id: controls
             Layout.fillHeight: true
             Layout.rightMargin: 16
+        }
+    }
+
+    //
+    // Connection status dialog
+    //
+    Dialog {
+        id: dialog
+
+        //
+        // Only close the dialog when the user
+        // presses on the 'OK' button
+        //
+        modal: true
+        standardButtons: Dialog.Ok
+        closePolicy: Dialog.NoAutoClose
+
+        //
+        // Center dialog on app window
+        //
+        x: (parent.width - width) / 2
+        y: (parent.height - height) / 2
+
+        //
+        // Set min. width to 320 pixels
+        //
+        width: Math.max(implicitWidth, 320)
+
+        //
+        // Used to select <None> after the user closes
+        // this dialog (only in the case that we could not
+        // connect to the serial device)
+        //
+        property bool error: false
+        onAccepted: {
+            if (error)
+                controls.currentDevice = 0
+        }
+
+        //
+        // Message description
+        //
+        Label {
+            id: description
+            anchors.fill: parent
+            verticalAlignment: Qt.AlignTop
+            horizontalAlignment: Qt.AlignLeft
+        }
+
+        //
+        // Show dialog when serial device connection status changes
+        //
+        Connections {
+            target: CSerial
+
+            onConnectionError: {
+                dialog.error = true
+                dialog.title = qsTr("Advertencia")
+                description.text = qsTr("Desconectado de \"%1\"").arg(deviceName)
+                dialog.open()
+            }
         }
     }
 }

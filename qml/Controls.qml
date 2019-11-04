@@ -24,84 +24,92 @@ import QtQuick.Controls 2.0
 import Qt.labs.settings 1.0
 
 ColumnLayout {
+    property alias currentDevice: devices.currentIndex
+    property alias rango: rangoCombo.currentIndex
+
     Settings {
-        property alias _rp: radioRaspberry.checked
-        property alias _rs: radioSerial.checked
         property alias _cg: checkDatosCSV.checked
-        property alias _cc: checkGrafContinua.checked
-        property alias _rg: rangoGrafica.currentIndex
+        property alias _rg: rangoCombo.currentIndex
     }
 
     Item {
-        Layout.fillHeight: true
+        height: 24
     }
 
     Image {
-        sourceSize.width: 164
+        sourceSize.width: 192
         source: "qrc:/images/unaq.svg"
         Layout.alignment: Qt.AlignHCenter
     }
 
     Item {
-        height: 32
+        height: 24
+    }
+
+    Label {
+        text: CAppName
+        font.bold: true
+        font.pixelSize: 24
+        Layout.alignment: Qt.AlignHCenter
+        horizontalAlignment: Qt.AlignHCenter
+    }
+
+    Label {
+        font.pixelSize: 16
+        Layout.alignment: Qt.AlignHCenter
+        horizontalAlignment: Qt.AlignHCenter
+        text: qsTr("Versión %1").arg(CAppVersion)
+    }
+
+    Item {
+        height: 24
     }
 
     GroupBox {
         Layout.fillWidth: true
-        title: qsTr("Configuración de Hardware")
 
         ColumnLayout {
             spacing: 8
             anchors.fill: parent
             anchors.centerIn: parent
 
-            RadioButton {
-                id: radioRaspberry
-                text: qsTr("Raspberry Pi")
+            Label {
+                text: qsTr("Configuración Serial") + ":"
             }
 
-            RadioButton {
-                id: radioSerial
-                text: qsTr("Puerto Serial/COM")
+            ComboBox {
+                id: devices
+                Layout.fillWidth: true
+                model: CSerial.serialDevices
+                onCurrentIndexChanged: CSerial.startComm(currentIndex)
             }
-        }
-    }
 
-    GroupBox {
-        Layout.fillWidth: true
-        title: qsTr("Opciones")
+            ComboBox {
+                currentIndex: 3
+                Layout.fillWidth: true
+                model: CSerial.baudRates
+                onCurrentTextChanged: CSerial.setBaudRate(currentText)
+            }
 
-        ColumnLayout {
-            spacing: 8
-            anchors.fill: parent
-            anchors.centerIn: parent
+            Label {
+                text: qsTr("Rango de Gráfica") + ":"
+            }
+
+            ComboBox {
+                id: rangoCombo
+                Layout.fillWidth: true
+                model: [
+                    qsTr("Mostrar todas las lecturas"),
+                    qsTr("%1 lecturas").arg(100),
+                    qsTr("%1 lecturas").arg(500),
+                    qsTr("%1 lecturas").arg(1000),
+                    qsTr("%1 lecturas").arg(10000),
+                ]
+            }
 
             CheckBox {
                 id: checkDatosCSV
                 text: qsTr("Guardar datos en archivo CSV")
-            }
-
-            CheckBox {
-                id: checkGrafContinua
-                text: qsTr("Gráfica Continua")
-            }
-
-            Label {
-                text: qsTr("Rango de Gráfica")
-            }
-
-            ComboBox {
-                id: rangoGrafica
-                enabled: !checkGrafContinua.checked
-                Layout.fillWidth: true
-                model: [
-                    qsTr("1 segundo"),
-                    qsTr("5 segundos"),
-                    qsTr("10 segundos"),
-                    qsTr("30 segundos"),
-                    qsTr("1 minuto"),
-                    qsTr("5 minutos"),
-                ]
             }
         }
     }
@@ -113,13 +121,15 @@ ColumnLayout {
     Button {
         highlighted: true
         Layout.fillWidth: true
-        enabled: checkDatosCSV.checked
         text: qsTr("Abrir archivo CSV")
+        enabled: checkDatosCSV.checked && CSerial.connected
     }
 
     Button {
         Layout.fillWidth: true
         text: qsTr("Limpiar datos")
+        onClicked: CManager.clearData()
+        enabled: CSerial.connected && CManager.numReadings > 0
     }
 
     Item {

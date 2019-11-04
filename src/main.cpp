@@ -23,12 +23,23 @@
 #include <QApplication>
 #include <QQmlApplicationEngine>
 
+#include "Serial.h"
+#include "DataManager.h"
+
 int main(int argc, char** argv) {
     QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
     QApplication app(argc, argv);
+    app.setApplicationName("Banco de Pruebas PVTOL");
+    app.setApplicationVersion("0.1");
+
+    DataManager manager;
     QQmlApplicationEngine engine;
     QQuickStyle::setStyle("Universal");
+    engine.rootContext()->setContextProperty("CAppName", app.applicationName());
+    engine.rootContext()->setContextProperty("CAppVersion", app.applicationVersion());
+    engine.rootContext()->setContextProperty("CSerial", Serial::getInstance());
+    engine.rootContext()->setContextProperty("CManager", &manager);
     engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
 
     if (engine.rootObjects().isEmpty())
