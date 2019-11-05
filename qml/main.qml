@@ -97,7 +97,6 @@ ApplicationWindow {
             DoubleSpinBox {
                 id: kP
                 realValue: 0.01
-                realStepSize: 0.01
                 Layout.fillWidth: true
                 onValueChanged: CManager.setP(realValue)
             }
@@ -115,7 +114,6 @@ ApplicationWindow {
             DoubleSpinBox {
                 id: kI
                 realValue: 0.01
-                realStepSize: 0.01
                 Layout.fillWidth: true
                 onValueChanged: CManager.setI(realValue)
             }
@@ -133,7 +131,6 @@ ApplicationWindow {
             DoubleSpinBox {
                 id: kD
                 realValue: 0.01
-                realStepSize: 0.01
                 Layout.fillWidth: true
                 onValueChanged: CManager.setD(realValue)
             }

@@ -25,6 +25,7 @@
 
 #include <QtQml>
 #include <QObject>
+#include <QSerialPort>
 
 class QSerialPort;
 class Serial : public QObject {

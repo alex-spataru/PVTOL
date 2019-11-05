@@ -26,7 +26,7 @@
 #include <QFile>
 #include <QTimer>
 #include <QDebug>
-#include <QSerialPort>
+#include <QMessageBox>
 #include <QSerialPortInfo>
 #include <QDesktopServices>
 
@@ -172,18 +172,16 @@ void Serial::startComm(const int device) {
         // Check if port ID is valid
         if (portId < ports.count()) {
             // Configure new serial port device
-            m_port = new QSerialPort(ports.at(portId));
+            m_port = new QSerialPort();
+            m_port->setPort(ports.at(portId));
             m_port->setBaudRate(baudRate());
 
             // Connect signals/slots
-            connect(m_port, SIGNAL(readyRead()),
-                    this,     SLOT(onDataReceived()));
-            connect(m_port, SIGNAL(aboutToClose()),
-                    this,     SLOT(disconnectDevice()));
+            connect(m_port, SIGNAL(readyRead()), this, SLOT(onDataReceived()));
+            connect(m_port, SIGNAL(aboutToClose()), this, SLOT(disconnectDevice()));
 
             // Try to open the serial port device
             if (m_port->open(QIODevice::ReadWrite)) {
-                m_port->setTextModeEnabled(true);
                 emit connectionChanged();
                 emit connectionSuccess(m_port->portName());
             }
@@ -256,9 +254,9 @@ void Serial::disconnectDevice() {
         // Get serial port name
         QString name = m_port->portName();
 
-        // Disconnect signals/slots of serial port
-        m_port->disconnect(this, SLOT(onDataReceived()));
+        // Disconnect signals/slots
         m_port->disconnect(this, SLOT(disconnectDevice()));
+        m_port->disconnect(this, SLOT(onDataReceived()));
 
         // Close and delete the serial port
         m_port->close();
